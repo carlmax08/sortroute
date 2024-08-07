@@ -10,8 +10,8 @@ const path = require('path');
 const app = express();
 const port = 3000;
 
-const accessToken = 'bc53649b-2a93-4a6b-97dd-a92e6ea02cc1';
-const apiKey = '11f4fbb642920f3bdd0e6c2342d70f44';
+const accessToken = 'a723d4ad-2404-4d3e-9548-9fe291cbe996';
+const apiKey = 'cb10bfd23550d2159b053990b249540e';
 
 const eLocApiUrl = 'https://atlas.mapmyindia.com/api/places/search/json';
 const routeApiUrl = (startELoc, destinationELoc) =>
