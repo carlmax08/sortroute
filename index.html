@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Route Comparison</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #map {
+      height: 70vh;
+      width: 100%;
+    }
+    .route-details {
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+    .route-details ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    .route-details li {
+      margin-bottom: 10px;
+    }
+  </style>
+  <script src="https://apis.mappls.com/advancedmaps/api/11f4fbb642920f3bdd0e6c2342d70f44/map_sdk?layer=vector&v=3.0&callback=initMap" defer async></script>
+</head>
+<body>
+  <div id="routes">
+    <div class="route-pair">
+      <input type="text" placeholder="Starting Point" class="starting-point">
+      <input type="text" placeholder="Destination" class="destination">
+      <input type="time" class="pickup-time">
+    </div>
+  </div>
+  <button id="add-route">Add Route</button>
+  <button id="compare-routes">Compare Routes</button>
+  <div id="map"></div>
+  <div id="routes-list"></div>
+
+  <script>
+    document.getElementById('add-route').addEventListener('click', () => {
+      const routesDiv = document.getElementById('routes');
+      const newRouteDiv = document.createElement('div');
+      newRouteDiv.classList.add('route-pair');
+      newRouteDiv.innerHTML = `
+        <input type="text" placeholder="Starting Point" class="starting-point">
+        <input type="text" placeholder="Destination" class="destination">
+        <input type="time" class="pickup-time">
+      `;
+      routesDiv.appendChild(newRouteDiv);
+    });
+
+    document.getElementById('compare-routes').addEventListener('click', async () => {
+      const routePairs = document.querySelectorAll('.route-pair');
+      const routes = [];
+
+      routePairs.forEach(pair => {
+        const startingPoint = pair.querySelector('.starting-point').value;
+        const destination = pair.querySelector('.destination').value;
+        const pickupTime = pair.querySelector('.pickup-time').value;
+        if (startingPoint && destination && pickupTime) {
+          routes.push({ startingPoint, destination, pickupTime });
+        }
+      });
+
+      if (routes.length === 0) {
+        alert('Please add at least one route.');
+        return;
+      }
+
+      const response = await fetch('/compare-routes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ routes }),
+      });
+
+      const comparedGroups = await response.json();
+      displayRoutesOnMap(comparedGroups);
+    });
+
+    let map, polyline;
+
+    function initMap() {
+      map = new mappls.Map('map', {
+        center: [28.6139, 77.2090], // Center on Delhi
+        zoomControl: true,
+        location: true
+      });
+    }
+
+    function displayRoutesOnMap(groups) {
+      if (polyline) {
+        polyline.setMap(null);
+      }
+
+      const routesListDiv = document.getElementById('routes-list');
+      routesListDiv.innerHTML = '';
+
+      groups.forEach(group => {
+        const pts = group.combinedRoute.coordinates.map(coord => ({ lat: coord[0], lng: coord[1] }));
+        polyline = new mappls.Polyline({
+          map: map,
+          paths: pts,
+          strokeColor: '#0096FF',
+          strokeOpacity: 1.0,
+          strokeWeight: 5,
+          fitbounds: true
+        });
+
+        const routeDiv = document.createElement('div');
+        routeDiv.classList.add('route-details');
+        routeDiv.innerHTML = `
+          <h3>Route Group</h3>
+          <ul>
+            ${group.routes.map((route, index) => `
+              <li>
+                <strong>Starting Point:</strong> ${route.startingPoint}<br>
+                <strong>Destination:</strong> ${route.destination}<br>
+                <strong>Pickup Time:</strong> ${route.pickupTime}<br>
+                <strong>Duration:</strong> ${route.duration} seconds<br>
+                <strong>Distance:</strong> ${route.distance} meters<br>
+                <strong>Pickup Possible:</strong> ${route.pickupPossible ? 'Yes' : 'No'}<br>
+                ${index < group.routes.length - 1 ? `
+                  <strong>Distance to Next Pickup:</strong> ${route.pickupDistanceToNext} meters<br>
+                  <strong>Duration to Next Pickup:</strong> ${route.pickupDurationToNext} seconds
+                ` : ''}
+              </li>
+            `).join('')}
+          </ul>
+          <h4>Combined Route:</h4>
+          <strong>Duration:</strong> ${group.combinedRoute.duration} seconds<br>
+          <strong>Distance:</strong> ${group.combinedRoute.distance} meters<br>
+        `;
+        routesListDiv.appendChild(routeDiv);
+      });
+    }
+  </script>
+</body>
+</html>
