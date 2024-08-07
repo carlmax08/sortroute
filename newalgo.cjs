@@ -1,5 +1,5 @@
 
-const {run} = require("./sorteloc.cjs")
+const {run} = require("sorteloc.cjs")
 const fs = require('fs');
 const axios = require('axios');
 const polyline = require('@mapbox/polyline');
