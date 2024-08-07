@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const mapMyIndiaApiKey = '11f4fbb642920f3bdd0e6c2342d70f44';
+const mapMyIndiaApiKey = 'cb10bfd23550d2159b053990b249540e';
 
 const getRouteDetails = async (startELoc, endELoc) => {
     const url = `https://apis.mapmyindia.com/advancedmaps/v1/${mapMyIndiaApiKey}/route_adv/driving/${startELoc};${endELoc}?geometries=geojson&source=any&destination=any&steps=false&region=IND&roundtrip=false&overview=simplified`;
